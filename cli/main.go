@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/bblfsh/sdk/uast"
+
 	"github.com/bblfsh/go-client"
 )
 
@@ -22,7 +24,9 @@ func main() {
 		panic(err)
 	}
 	results, _ := bblfsh.Find(res.UAST, "//NumLiteral")
-	for _, r := range results {
-		fmt.Println(r)
+	for i, r := range results {
+		fmt.Println("- ", i+1, " ----------------------")
+		node := r.(uast.Node)
+		fmt.Println(node.String())
 	}
 }
