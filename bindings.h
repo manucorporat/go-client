@@ -1,50 +1,53 @@
+#ifndef _GO_CLIENT_BINDINGS_H_
+#define _GO_CLIENT_BINDINGS_H_
+
 #include <libuast/uast.h>
 
-static const char *
-read_str(const void *data, const char *prop)
-{
-  PyObject *node = (PyObject *)data;
-  PyObject *attribute = PyObject_GetAttrString(node, prop);
-  const char *a = PyUnicode_AsUTF8(attribute);
+union void_cast {
+  uintptr_t i;
+  void *ptr;
+};
 
-  return a;
+static void *toPtr(uintptr_t a) {
+  union void_cast cast;
+  cast.i = a;
+  return cast.ptr;
 }
 
-static int read_len(const void *data, const char *prop)
-{
-  PyObject *node = (PyObject *)data;
-  PyObject *children_obj = PyObject_GetAttrString(node, prop);
-  PyObject *seq = PySequence_Fast(children_obj, "expected a sequence");
-  return PySequence_Size(children_obj);
-}
+extern char* goGetInternalType(void*);
+extern int goGetPropertiesSize(void*);
+extern char* goGetToken(void*);
+extern int goGetChildrenSize(void*);
+extern uintptr_t goGetChild(void*, int);
+extern int goGetRolesSize(void*);
+extern uint16_t goGetRole(void*, int);
 
 static const char *
 get_internal_type(const void *node)
 {
-  return read_str(node, "internal_type");
+  const char *name = goGetInternalType((void*)node);
+  return name;
 }
 
 static const char *get_token(const void *node)
 {
-  return read_str(node, "token");
+  const char *name = goGetToken((void*)node);
+  return name;
 }
 
 static int get_children_size(const void *node)
 {
-  return read_len(node, "children");
+  return goGetChildrenSize((void*)node);
 }
 
 static void *get_child(const void *data, int index)
 {
-  PyObject *node = (PyObject *)data;
-  PyObject *children_obj = PyObject_GetAttrString(node, "children");
-  PyObject *seq = PySequence_Fast(children_obj, "expected a sequence");
-  return PyList_GET_ITEM(seq, index);
+  return toPtr(goGetChild((void *)data, index));
 }
 
 static int get_roles_size(const void *node)
 {
-  return read_len(node, "roles");
+  return goGetRolesSize((void*)node);
 }
 
 static uint16_t get_role(const void *node, int index)
@@ -53,8 +56,9 @@ static uint16_t get_role(const void *node, int index)
 }
 
 static node_api *api;
+static find_ctx *ctx;
 
-void create_go_node_api()
+static void create_go_node_api()
 {
   api = new_node_api((node_iface){
       .internal_type = get_internal_type,
@@ -64,4 +68,20 @@ void create_go_node_api()
       .roles_size = get_roles_size,
       .roles = get_role,
   });
+  ctx = new_find_ctx();
 }
+
+static int _api_find(uintptr_t node_ptr, const char *query) {
+  void *node = toPtr(node_ptr);
+  return node_api_find(api, ctx, node, query);
+}
+
+static int _api_get_nu_results() {
+  return find_ctx_get_len(ctx);
+}
+
+static void *_api_get_result(unsigned int i) {
+  return find_ctx_get(ctx, i);
+}
+
+#endif

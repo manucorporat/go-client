@@ -1,6 +1,7 @@
 package bblfsh
 
 import (
+	"context"
 	"io/ioutil"
 	"path"
 
@@ -45,9 +46,9 @@ func (req *ParseRequest) Encoding(encoding protocol.Encoding) *ParseRequest {
 }
 
 func (req *ParseRequest) Do() (*protocol.ParseResponse, error) {
-	return req.client.client.Parse(nil, &req.internal)
+	return req.client.client.Parse(context.TODO(), &req.internal)
 }
 
 func (req *ParseRequest) DoWithContext() (*protocol.ParseResponse, error) {
-	return req.client.client.Parse(nil, &req.internal)
+	return req.client.client.Parse(context.TODO(), &req.internal)
 }

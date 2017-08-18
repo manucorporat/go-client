@@ -12,7 +12,7 @@ type BblfshClient struct {
 }
 
 func NewBblfshClient(endpoint string) (*BblfshClient, error) {
-	conn, err := grpc.Dial(endpoint, grpc.WithTimeout(time.Second*2))
+	conn, err := grpc.Dial(endpoint, grpc.WithTimeout(time.Second*2), grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
